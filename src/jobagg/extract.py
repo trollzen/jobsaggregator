@@ -93,7 +93,11 @@ class RuleExtractor:
                 fields[key] = _clean(m.group(1))
 
         title = fields.get("title") or self._guess_title(lines)
+        company = fields.get("company", "")
         location = fields.get("location", "")
+        # "Title / Company" headline (common in job channels), location on a following line
+        if not company:
+            title, company, location = self._split_headline(title, lines, location)
 
         sal_text = fields.get("salary") or text
         salary_min, salary_max, currency = (
@@ -149,7 +153,7 @@ class RuleExtractor:
                 post_date=post.date.strftime("%Y-%m-%d %H:%M") if post.date else "",
                 title=title[:150],
                 seniority=seniority,
-                company=fields.get("company", "")[:100],
+                company=company[:100],
                 city=location[:100],
                 work_mode=work_mode,
                 salary_min=salary_min,
@@ -165,9 +169,24 @@ class RuleExtractor:
         ]
 
     @staticmethod
+    def _split_headline(title: str, lines: list[str], location: str) -> tuple[str, str, str]:
+        if " / " not in title and not title.endswith(" /"):
+            return title, "", location
+        head, _, company = title.partition(" /")
+        company = _clean(company)
+        idx = next((i for i, ln in enumerate(lines) if _clean(ln) and _clean(ln) in title), 0)
+        rest = [_clean(ln) for ln in lines[idx + 1 : idx + 5]]
+        rest = [r for r in rest if r and re.search(r"\w", r)]
+        if not company and rest:
+            company, rest = rest[0], rest[1:]
+        if not location and rest and len(rest[0]) <= 80 and not rest[0].endswith((".", ":")):
+            location = rest[0]
+        return _clean(head), company, location
+
+    @staticmethod
     def _guess_title(lines: list[str]) -> str:
         for ln in lines[:3]:
             cleaned = _clean(ln)
-            if 3 <= len(cleaned) <= 120 and not cleaned.lower().startswith(("http", "#")):
+            if 3 <= len(cleaned) <= 120 and re.search(r"\w{3}", cleaned):
                 return cleaned
         return ""

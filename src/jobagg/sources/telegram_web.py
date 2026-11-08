@@ -6,6 +6,7 @@ older posts are reached with ?before=<message_id>.
 
 from __future__ import annotations
 
+import html as htmllib
 import logging
 import time
 from datetime import UTC, datetime, timedelta
@@ -40,8 +41,8 @@ def parse_page(html: str, channel: str) -> list[Post]:
         links: list[str] = []
         if text_el:
             for a in text_el.select("a[href]"):
-                href = a["href"]
-                if href not in links:
+                href = htmllib.unescape(a["href"]).strip()
+                if href.startswith(("http://", "https://")) and href not in links:
                     links.append(href)
         date = None
         time_el = msg.select_one("a.tgme_widget_message_date time[datetime]")
