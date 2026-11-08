@@ -54,7 +54,16 @@ class _Broken:
         raise RuntimeError(self.err)
 
 
-def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=None) -> dict:
+def run(
+    cfg: dict,
+    dry_run: bool = False,
+    source=None,
+    store=None,
+    tg_source=None,
+    days: int | None = None,
+    max_posts: int | None = None,
+) -> dict:
+    """days: re-read the last N days ignoring saved state (checks); dedupe still applies."""
     fetch_cfg = cfg["fetch"]
     sources = build_sources(cfg, source, tg_source)
     store = store or make_store(cfg["store"])
@@ -90,9 +99,9 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
         try:
             posts = src.fetch(
                 channel,
-                after_id=state.get(channel, 0),
-                max_posts=fetch_cfg.get("max_posts_per_channel", 200),
-                backfill_days=fetch_cfg.get("backfill_days", 7),
+                after_id=0 if days else state.get(channel, 0),
+                max_posts=max_posts or fetch_cfg.get("max_posts_per_channel", 200),
+                backfill_days=days or fetch_cfg.get("backfill_days", 7),
             )
         except Exception as e:  # one channel must not break the run
             log.error("channel %s failed: %s", channel, e)
@@ -101,6 +110,8 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
         stats["channels_ok"] += 1
         stats["read"] += len(posts)
         ch = {"not_vacancy": 0, "not_domain": 0, "not_mine": 0, "not_role": 0}
+        no_text = sum(1 for p in posts if not p.text.strip())  # images without caption
+        dups = high = 0
         for post in posts:
             if not prefilter.passes(post):
                 ch["not_vacancy"] += 1
@@ -119,26 +130,46 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
                 checked = deduper.check(job)
                 if checked is None:
                     stats["duplicates"] += 1
+                    dups += 1
+                    log.info(
+                        "duplicate: %s | %s | first seen in %s",
+                        job.title[:80],
+                        channel,
+                        deduper.origin.get(job.hash, "?"),
+                    )
                     continue
                 if checked.possible_dup:
                     stats["possible_dups"] += 1
+                high += checked.priority == "высокий"
                 to_write.append(checked)
         for key, n in ch.items():
             stats[key] += n
             stats["filtered_out"] += n
         log.info(
-            "channel %s: posts=%d not_vacancy=%d not_domain=%d not_mine=%d not_role=%d left=%d",
+            "channel %s: posts=%d not_vacancy=%d not_domain=%d not_mine=%d not_role=%d left=%d "
+            "duplicates=%d high=%d no_text=%d",
             channel,
             len(posts),
             *ch.values(),
             len(posts) - sum(ch.values()),
+            dups,
+            high,
+            no_text,
         )
         if posts:
             new_state[channel] = max(p.message_id for p in posts)
 
     if dry_run:
         for j in to_write:
-            log.info("[dry-run] %s | %s | %s | %s", j.title, j.company, j.contact, j.post_url)
+            log.info(
+                "[dry-run] %s | %s | %s | %s | %s | %s",
+                j.priority or "-",
+                j.title,
+                j.company,
+                j.source,
+                j.experience_match,
+                j.post_url,
+            )
     else:
         # rows first, state second: a crash in between only causes re-processing,
         # which dedupe catches.
@@ -196,6 +227,10 @@ def main(argv: list[str] | None = None) -> int:
         help="save last N posts per channel to out/posts_*.jsonl and exit",
     )
     ap.add_argument("--store", choices=["csv", "sheets"], help="override store.type")
+    ap.add_argument(
+        "--days", type=int, help="re-read the last N days ignoring saved state (for checks)"
+    )
+    ap.add_argument("--max-posts", type=int, help="override fetch.max_posts_per_channel")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
@@ -207,7 +242,7 @@ def main(argv: list[str] | None = None) -> int:
         dump_posts(cfg, args.dump_posts)
         return 0
 
-    stats = run(cfg, dry_run=args.dry_run)
+    stats = run(cfg, dry_run=args.dry_run, days=args.days, max_posts=args.max_posts)
     line = (
         "read={read} not_vacancy={not_vacancy} not_domain={not_domain} "
         "not_mine={not_mine} not_role={not_role} "

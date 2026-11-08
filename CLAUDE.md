@@ -66,6 +66,26 @@ GitHub Actions используется только для проверки к�
   (`-NoSuccessToast` выключает уведомление об успехе). .ps1 сохранены в UTF-8 с BOM (иначе PowerShell 5.1
   ломает русский текст). Пробный запуск из Планировщика: код 0; тест падения (`-Config` на несуществующий файл): код 1.
 
+- 31 новый канал от владельца (2026-11-08), владелец решил читать все, ничего не удалять без его решения.
+  Открытые (в `channels`, 27): sberlogajobs2, pharmed_recruitment, sci_career, stemjobs, bigtechjobs, jobsbt,
+  Microbiotechjobs, clinicalresearchjobvacancies, Baprofessionals, jobs_pm, forproducts, Remoteit,
+  hh_vacancy_medicine, careerfactory, productjobgo, jobsbiotech, pharmer_career, jobfeeds, newhrvacancies,
+  rfoundersjobs, neurotechjobs, jobs_product_managers, lapainpharma, cpo_job, bluesky_bioinf, ratracerebellion,
+  jobs_inarmenia. Закрытые (в `telethon.channels`, владелец состоит): projects_jobs_feed, products_jobs (группа),
+  projects_jobs (группа), findmyremote_product. Всего каналов 37 (33 открытых + 4 закрытых).
+  Проверка `jobagg --dry-run --days 60 --max-posts 1000`: 37/37 прочитаны, 4974 поста, итог 209, высокий 32.
+  Больше всего дают: pharmed_recruitment (51, но это дайджесты), clinicalresearchjobvacancies (50),
+  pharmer_career (29), findmyremote_product (17, 9 из них дайджесты «15 found»).
+  Мёртвый за 60 дней: hh_vacancy_medicine. Картинок без текста больше половины — ни у кого (всего 106 из 4974).
+  products_jobs и projects_jobs — группы с болтовнёй (≈92% «не вакансия»), упёрлись в лимит 1000 постов за 60 дней.
+  Дубли: 15 (10 в том же канале, 4 между каналами, 1 уже в таблице).
+- Новое в коде: `--days N` (перечитать N дней без учёта сохранённого места, для проверок), `--max-posts N`;
+  в логе по каналу duplicates/high/no_text, строка `duplicate: ... first seen in ...`;
+  Telethon больше не пропускает картинки без подписи (они считаются, затем отсеиваются префильтром).
+  Исправлен дедуп: `norm_url` отрезал весь `?query`, и все ссылки вида `detail.php?ID=...` одного сайта
+  склеивались в одну (pharmed_recruitment: 51 → 1). Теперь отрезаются только utm_*, mc_*, fbclid, gclid, yclid,
+  ref, source.
+
 ## Следующие шаги
 4. Закрытые каналы (если появятся): `config.yaml` → `telethon.channels` (формат `{name: "...", id: -100...}`).
    Список каналов с id печатает `.venv\Scripts\python scripts\tg_login.py` (повторный вход не нужен).

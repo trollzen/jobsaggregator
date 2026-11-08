@@ -25,14 +25,26 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+_TRACKING_PREFIX = ("utm_", "mc_")
+_TRACKING_NAMES = {"fbclid", "gclid", "yclid", "ref", "source"}
+
+
+def _is_tracking(param: str) -> bool:
+    name = param.split("=", 1)[0].lower()
+    return name.startswith(_TRACKING_PREFIX) or name in _TRACKING_NAMES
+
+
 def norm_url(url: str) -> str:
+    """Same job, other formatting -> same string. Keeps query params like ?ID=123
+    (they often identify the job), drops only tracking ones (utm_*, fbclid...)."""
     parts = urlsplit(url.strip())
+    query = sorted(p for p in parts.query.split("&") if p and not _is_tracking(p))
     return urlunsplit(
         (
             parts.scheme.lower(),
             parts.netloc.lower().removeprefix("www."),
             parts.path.rstrip("/"),
-            "",
+            "&".join(query),
             "",
         )
     ).lower()
@@ -51,6 +63,7 @@ def job_key(job: Job) -> str:
 class Deduper:
     def __init__(self, existing: list[Job], fuzzy_threshold: int = 92, window_days: int = 30):
         self.seen: set[str] = {j.hash for j in existing if j.hash}
+        self.origin: dict[str, str] = {h: "таблица" for h in self.seen}  # hash -> where first seen
         self.threshold = fuzzy_threshold
         cutoff = datetime.now() - timedelta(days=window_days)
         self.recent = [j for j in existing if j.company and _parse(j.found_at, cutoff) >= cutoff]
@@ -70,6 +83,7 @@ class Deduper:
                     job.possible_dup = other.hash
                     break
         self.seen.add(job.hash)
+        self.origin.setdefault(job.hash, job.source or "?")
         self.recent.append(job)
         return job
 

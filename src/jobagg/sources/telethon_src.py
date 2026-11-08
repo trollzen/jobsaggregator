@@ -66,7 +66,7 @@ class TelethonSource:
         for msg in self.client.iter_messages(channel_id, min_id=after_id, limit=max_posts):
             if after_id == 0 and msg.date and msg.date < cutoff:
                 break
-            if msg.message:
+            if msg.message or getattr(msg, "media", None):  # image without caption: counted
                 posts.append(message_to_post(msg, channel, channel_id))
         return sorted(posts, key=lambda p: p.message_id)
 

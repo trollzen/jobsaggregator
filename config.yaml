@@ -6,14 +6,46 @@ channels:
   - dataviz_jobs
   - remote_jobs_relocate
   - choicy_work
+  # 2026-11-08: 27 каналов, отобранных владельцем (веб-версия открыта)
+  - sberlogajobs2
+  - pharmed_recruitment
+  - sci_career
+  - stemjobs
+  - bigtechjobs
+  - jobsbt
+  - Microbiotechjobs
+  - clinicalresearchjobvacancies
+  - Baprofessionals
+  - jobs_pm
+  - forproducts
+  - Remoteit
+  - hh_vacancy_medicine
+  - careerfactory
+  - productjobgo
+  - jobsbiotech
+  - pharmer_career
+  - jobfeeds
+  - newhrvacancies
+  - rfoundersjobs
+  - neurotechjobs
+  - jobs_product_managers
+  - lapainpharma
+  - cpo_job
+  - bluesky_bioinf
+  - ratracerebellion
+  - jobs_inarmenia
   # jobsbio: превью закрыто (редирект), перенести в telethon.channels, если нужен
 
 # Закрытые каналы: через Telegram API (Telethon), запуск с твоего компьютера.
 # Список с id печатает scripts/tg_login.py. TG_API_ID и TG_API_HASH лежат в .env
 telethon:
   session: tg.session
-  channels: []
-  #  - {name: "my_private_jobs", id: -1001234567890}
+  channels:
+    # веб-версия закрыта, владелец состоит (id из scripts/tg_login.py)
+    - {name: "projects_jobs_feed", id: -1001229149302}
+    - {name: "products_jobs", id: -1001088399568}      # группа
+    - {name: "projects_jobs", id: -1001095758423}      # группа
+    - {name: "findmyremote_product", id: -1002337083766}
 
 fetch:
   max_posts_per_channel: 200   # ограничение бэкфилла при первом запуске

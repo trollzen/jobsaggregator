@@ -117,3 +117,14 @@ def test_health_check_fails_when_all_channels_fail(tmp_path):
 
 def test_post_url():
     assert Post(channel="x", message_id=5).url == "https://t.me/x/5"
+
+
+def test_norm_url_keeps_job_id_drops_tracking():
+    from jobagg.dedupe import norm_url
+
+    a = "https://sferecruitment.ru/jobsearch/detail.php?ID=151942"
+    b = "https://sferecruitment.ru/jobsearch/detail.php?ID=151952"
+    assert norm_url(a) != norm_url(b)  # different vacancies on one site
+    assert norm_url("https://www.x.com/j/1/?utm_source=tg&fbclid=1") == norm_url(
+        "https://x.com/j/1"
+    )
