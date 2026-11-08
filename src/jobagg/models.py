@@ -44,6 +44,8 @@ class Job(BaseModel):
     method: str = "rules"  # ai | rules
     possible_dup: str = ""
     hash: str = ""
+    domain_match: str = ""  # which "Сфера" keyword matched
+    role_match: str = ""  # which "Роль" keyword matched
 
 
 # Column header (in the sheet) -> Job field. Order = default column order.
@@ -71,6 +73,9 @@ COLUMNS: list[tuple[str, str]] = [
     ("Метод", "method"),
     ("Возможный дубль", "possible_dup"),
     ("Хэш", "hash"),
+    # new columns go only at the end, so existing sheet columns don't shift
+    ("Сфера (совпадение)", "domain_match"),
+    ("Роль (совпадение)", "role_match"),
 ]
 HEADER = [h for h, _ in COLUMNS]
 FIELD_BY_HEADER = dict(COLUMNS)

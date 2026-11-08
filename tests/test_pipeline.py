@@ -76,7 +76,8 @@ def test_dedupe_exact_and_fuzzy():
 def test_build_rows_by_header_name():
     header = ["Моя колонка", "Должность", "Статус"]
     assert build_rows(header, [Job(title="QA")]) == [["", "QA", "новая"]]
-    assert len(HEADER) == 23
+    assert len(HEADER) == 25
+    assert HEADER[-2:] == ["Сфера (совпадение)", "Роль (совпадение)"]
 
 
 class FakeSource:
@@ -87,6 +88,7 @@ class FakeSource:
 def test_run_twice_writes_nothing_new(tmp_path):
     cfg = load_config(ROOT / "config.yaml")
     cfg["channels"] = ["testjobs"]
+    cfg["domain_keywords"] = cfg["role_keywords"] = []  # fixture posts: generic IT
     store = CsvStore(tmp_path / "jobs.csv", tmp_path / "state.json")
     s1 = run(cfg, source=FakeSource(), store=store)
     assert s1["written"] == 2 and s1["read"] == 4

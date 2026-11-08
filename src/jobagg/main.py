@@ -13,6 +13,7 @@ from pathlib import Path
 from jobagg.config import load_config, load_env
 from jobagg.dedupe import Deduper
 from jobagg.extract import RuleExtractor
+from jobagg.keywords import TopicFilter
 from jobagg.prefilter import Prefilter
 from jobagg.sources.telegram_web import TelegramWebSource
 from jobagg.store import make_store
@@ -58,6 +59,7 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
     sources = build_sources(cfg, source, tg_source)
     store = store or make_store(cfg["store"])
     prefilter = Prefilter.from_config(cfg["prefilter"])
+    topic = TopicFilter.from_config(cfg)
     extractor = RuleExtractor()  # LLMExtractor in stage 5 (ai.mode: hybrid)
 
     state = store.load_state()
@@ -70,7 +72,10 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
         "channels_ok": 0,
         "channels_failed": 0,
         "read": 0,
-        "filtered_out": 0,
+        "filtered_out": 0,  # sum of the three below
+        "not_vacancy": 0,
+        "not_domain": 0,
+        "not_role": 0,
         "extracted": 0,
         "duplicates": 0,
         "possible_dups": 0,
@@ -94,13 +99,20 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
             continue
         stats["channels_ok"] += 1
         stats["read"] += len(posts)
+        ch = {"not_vacancy": 0, "not_domain": 0, "not_role": 0}
         for post in posts:
             if not prefilter.passes(post):
-                stats["filtered_out"] += 1
+                ch["not_vacancy"] += 1
+                continue
+            reason, domain_match, role_match = topic.check(post.text)
+            if reason:
+                ch[reason] += 1
                 continue
             for job in extractor.extract(post):
                 stats["extracted"] += 1
                 job.found_at = now
+                job.domain_match = domain_match
+                job.role_match = role_match
                 checked = deduper.check(job)
                 if checked is None:
                     stats["duplicates"] += 1
@@ -108,6 +120,16 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
                 if checked.possible_dup:
                     stats["possible_dups"] += 1
                 to_write.append(checked)
+        for key, n in ch.items():
+            stats[key] += n
+            stats["filtered_out"] += n
+        log.info(
+            "channel %s: posts=%d not_vacancy=%d not_domain=%d not_role=%d left=%d",
+            channel,
+            len(posts),
+            *ch.values(),
+            len(posts) - sum(ch.values()),
+        )
         if posts:
             new_state[channel] = max(p.message_id for p in posts)
 
@@ -181,7 +203,8 @@ def main(argv: list[str] | None = None) -> int:
 
     stats = run(cfg, dry_run=args.dry_run)
     line = (
-        "read={read} filtered_out={filtered_out} extracted={extracted} "
+        "read={read} not_vacancy={not_vacancy} not_domain={not_domain} not_role={not_role} "
+        "filtered_out={filtered_out} extracted={extracted} "
         "duplicates={duplicates} possible_dups={possible_dups} written={written} "
         "channels_ok={channels_ok} channels_failed={channels_failed}"
     ).format(**stats)

@@ -56,6 +56,7 @@ def test_run_with_closed_channel(tmp_path):
     cfg = load_config("config.yaml")
     cfg["channels"] = []
     cfg["telethon"]["channels"] = [{"name": "closed", "id": -1001}]
+    cfg["domain_keywords"] = cfg["role_keywords"] = []  # fake post: generic IT
     tg = TelethonSource(cfg["telethon"]["channels"], client=FakeClient([FakeMsg(5)]))
     store = CsvStore(tmp_path / "jobs.csv", tmp_path / "state.json")
     stats = run(cfg, store=store, tg_source=tg)

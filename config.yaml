@@ -52,6 +52,82 @@ prefilter:
     - "t.me/addlist"           # реклама «папок» с каналами
     - "забрать папку"
 
+# Фильтры 2 «Сфера» и 3 «Роль» (после префильтра), только ключевые слова, без AI.
+# В одной строке можно перечислить несколько слов через запятую. Как искать:
+#   [слово]  только отдельным словом ("[PM]" не находит "npm"; "5 pm" тоже не PM)
+#   слово*   начало слова ("клиник*" находит "клиника", "клиникой")
+#   прочее   фраза целиком в любом месте текста
+# Регистр не важен, «ё» = «е», дефис = пробел. Пустой список выключает фильтр.
+
+# 2. Сфера: пост проходит, если есть хотя бы одно слово отсюда
+domain_keywords:
+  # EN, общие
+  - "healthcare, health care, healthtech, health tech, health-tech, digital health, medtech, med tech,
+    medical, medicine, clinical, clinic, clinics, hospital, hospitals, patients, patient care, patient data,
+    patient experience, physician, physicians, nurse, nursing, care provider, provider network, payer,
+    health plan, telemedicine, telehealth, mhealth, ehealth, diagnostics, diagnostic, laboratory, imaging,
+    radiology, oncology, cardiology, dental, femtech, mental health platform"
+  # EN, pharma и biotech
+  - "pharma, pharmaceutical, pharmaceuticals, biopharma, drug development, drug discovery, drug safety,
+    pharmacovigilance, pharmacy, biotech, biotechnology, life science, life sciences, biologics, genomics,
+    bioinformatics, molecular, precision medicine, clinical trial, clinical trials, clinical research,
+    clinical development, clinical operations, contract research organization, medical device,
+    medical devices, in vitro diagnostics, regulatory affairs, medical affairs, real-world evidence,
+    real world evidence"
+  # EN, сокращения и стандарты (отдельными словами)
+  - "[EHR], [EMR], [EMRs], [EHRs], [HL7], [FHIR], [HIPAA], [DICOM], [PACS], [LIMS], [CTMS], [eCRF], [EDC],
+    [CDISC], [SDTM], [ADaM], [MedDRA], [ICD-10], [ICD-11], [SNOMED], [LOINC], [GxP], [GMP], [GLP], [FDA],
+    [EMA], [IVD], [SaMD], [RWE], [RWD], [HEOR], [NGS], [MSL], [ISO 13485], [IEC 62304], [21 CFR]"
+  # RU
+  - "медицин*, медтех*, здравоохранен*, цифровое здравоохранение, клиник*, клинич*, больниц*, госпитал*,
+    поликлиник*, пациент*, врач*, телемедицин*, фарм*, фармацевт*, фармаколог*, фармаконадзор*, биотех*,
+    биотехнолог*, биоинформат*, геном*, генетик*, молекуляр*, лаборатор*, диагностик*, онколог*, радиолог*,
+    кардиолог*, стоматолог*, реабилитац*, медицинских изделий, медицинские изделия, медизделия,
+    клинические исследования, клинических исследований, регистрация лекарств*, лекарственн*"
+  # RU, сокращения (отдельными словами)
+  - "[МИС], [ЛИС], [РИС], [ЭМК], [ЭМД], [ЛПУ], [МО], [ЕГИСЗ], [ОМС]"
+
+# Бонусы работодателя: вырезаются из текста перед проверкой сферы (это льготы, а не сфера)
+domain_ignore_phrases:
+  - "ДМС, полис ДМС, добровольное медицинское страхование, медицинское страхование, медицинская страховка,
+    медстраховка, компенсация медицин*, медосмотр, медицинский осмотр, медицинская книжка, медкнижка,
+    оплата больничн*, больничный"
+  - "health insurance, medical insurance, dental insurance, vision insurance, private healthcare,
+    private medical, private health insurance, medical coverage, health coverage, medical benefits,
+    health benefits, health and wellness, wellness program, wellbeing program, mental health days,
+    sick leave, sick days, medical leave, gym membership"
+
+# 3. Роль: пост проходит, если есть хотя бы одно слово отсюда
+role_keywords:
+  # Project / program / delivery
+  - "project manager, project management, program manager, programme manager, delivery manager,
+    delivery lead, [PMO], [PM], scrum master, clinical project manager, clinical trial manager,
+    clinical program manager, study manager, study start-up, implementation manager, implementation lead"
+  - "менеджер проект*, руководитель проект*, проджект*, проектный менеджер, менеджер по проектам,
+    руководитель программ*, менеджер по внедрению, руководитель внедрения"
+  # Business / system analyst
+  - "business analyst, business analysis, [BA], requirements analyst, system analyst, systems analyst,
+    clinical analyst, healthcare analyst, analyst"
+  - "бизнес-аналитик*, бизнес-анализ, системный аналитик, аналитик требований, аналитик*"
+  # Product
+  - "product owner, [PO], product manager, product lead, clinical product manager,
+    clinical product specialist"
+  - "владелец продукта, продакт оунер, продакт*, продуктовый менеджер, менеджер продукта"
+  # Clinical
+  - "clinical specialist, clinical application specialist, clinical applications specialist,
+    clinical solutions, clinical consultant, clinical informatics, clinical informaticist,
+    clinical operations manager, clinical operations lead, clinical research associate, [CRA],
+    clinical research coordinator, [CRC], clinical data manager, clinical lead, medical advisor,
+    medical manager, medical science liaison, [MSL], medical affairs manager, medical lead"
+  - "клинический специалист, специалист по клиническ*, менеджер клинических исследований,
+    монитор клинических исследований, координатор клинических исследований, медицинский советник,
+    медицинский менеджер, медицинский эксперт"
+  # Consulting / implementation
+  - "life science consultant, life sciences consultant, healthcare consultant, management consultant,
+    consultant, consulting, solutions consultant, implementation specialist, implementation consultant,
+    customer success manager, regulatory affairs specialist, regulatory affairs manager"
+  - "консультант*, специалист по внедрению, менеджер по работе с клиентами, специалист по регистрации"
+
 ai:
   mode: "off"                  # off | hybrid (этап 5)
   model: claude-haiku-5-5
