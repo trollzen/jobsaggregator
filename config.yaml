@@ -198,7 +198,7 @@ dedupe:
   window_days: 30
 
 store:
-  type: csv                    # csv | sheets
+  type: sheets                 # csv | sheets
   csv_path: out/jobs.csv
   state_path: out/state.json   # только для csv
   sheet_tab: Вакансии          # для sheets; SHEET_ID и GOOGLE_SA_JSON из окружения

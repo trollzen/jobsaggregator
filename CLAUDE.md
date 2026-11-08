@@ -15,7 +15,7 @@
 
 ## Где запускается
 Компьютер владельца, Windows, PowerShell. Программа стоит в `.venv` в этой папке:
-`.venv\Scripts\jobagg --dry-run` (без записи), `.venv\Scripts\jobagg --store sheets` (запись в таблицу).
+`.venv\Scripts\jobagg --dry-run` (без записи), `.venv\Scripts\jobagg` (запись в таблицу: `store.type: sheets`).
 GitHub Actions используется только для проверки кода (CI) и ручной выгрузки постов, не для расписания:
 закрытые каналы требуют постоянного IP, поэтому расписание на этом компьютере.
 
@@ -23,7 +23,7 @@ GitHub Actions используется только для проверки к�
 - Программа установлена, пробный запуск по `opento_dev` работает.
 - Вход в Telegram выполнен: файл `tg.session` в этой папке.
 - Google-таблица «Телеграм», SHEET_ID `17PfgRq3nJ3aCnavsJZ0wA5IBCLNbxgBE7rB9Ok0vBOU`:
-  лист «Вакансии» (23 колонки, выпадающий «Статус», закреплённая шапка), скрытый лист `_state`, 5 тестовых строк.
+  лист «Вакансии» (выпадающий «Статус», закреплённая шапка), скрытый лист `_state`.
 - Шаг 3 (2026-11-08): добавлены 5 каналов владельца. У всех открыта веб-версия, поэтому они в `channels`, а не в `telethon`:
   zarubezhom_jobs, runello_rus_datascience, dataviz_jobs, remote_jobs_relocate, choicy_work.
   `telethon.channels` пока пуст. Пробный `--dry-run`: 6 каналов прочитаны, 73 поста, 4 отсеяно, 69 вакансий.
@@ -50,14 +50,16 @@ GitHub Actions используется только для проверки к�
   Слова, одинаковые после «ё = е» (удален*/удалён*), считаются один раз.
   Проверка на 60 днях: осталось 14, высокий приоритет 0, средний 12. Каналы IT-шные; для профиля нужны
   медицинские/фарма-каналы.
+- Шаг 5, запись в Google Sheets (2026-11-08): проект Google Cloud `jobsaggregator-514104`, Sheets API включён,
+  service account `jobagg-writer@jobsaggregator-514104.iam.gserviceaccount.com` (роль «Редактор» в таблице),
+  ключ `service_account.json` в этой папке (в .gitignore), в `.env` заданы SHEET_ID и GOOGLE_SA_FILE.
+  5 тестовых строк удалены. Первый `jobagg --store sheets`: written=1 (Veeva, CSM Pharmacovigilance),
+  программа сама дописала 4 колонки в конец (теперь 27). Второй запуск сразу: written=0. `store.type: sheets`.
+  Замечено в строке Veeva (извлечение): «Компания» пустая, «Ссылка на вакансию» взята из чужой ссылки в посте.
 
 ## Следующие шаги
 4. Закрытые каналы (если появятся): `config.yaml` → `telethon.channels` (формат `{name: "...", id: -100...}`).
    Список каналов с id печатает `.venv\Scripts\python scripts\tg_login.py` (повторный вход не нужен).
-5. Google service account: проект в Google Cloud, включить Sheets API, создать service account и JSON-ключ,
-   сохранить ключ как `service_account.json` в этой папке, дать email аккаунта права «Редактор» в таблице.
-   Затем `jobagg --store sheets` дважды: второй запуск должен записать 0 строк.
-   После этого в `config.yaml` поставить `store.type: sheets`.
 6. Планировщик заданий Windows: запуск `jobagg` каждые 4-6 часов из этой папки, лог в файл,
    понятное оповещение, если запуск упал (код выхода не 0).
 Потом: лист «Каналы» в таблице вместо списка в config.yaml, разбор дайджестов, AI-извлечение (Claude Haiku), Match.
