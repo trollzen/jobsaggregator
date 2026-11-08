@@ -144,6 +144,9 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
         # which dedupe catches.
         stats["written"] = store.append(to_write)
         store.save_state(new_state)
+    # among new rows (in dry-run: rows that would be written); used by the success notification
+    stats["high"] = sum(1 for j in to_write if j.priority == "высокий")
+    stats["medium"] = sum(1 for j in to_write if j.priority == "средний")
 
     health_fail = (
         cfg["health"].get("fail_if_no_posts", True) and sources and stats["channels_ok"] == 0
@@ -210,7 +213,7 @@ def main(argv: list[str] | None = None) -> int:
         "not_mine={not_mine} not_role={not_role} "
         "filtered_out={filtered_out} extracted={extracted} "
         "duplicates={duplicates} possible_dups={possible_dups} written={written} "
-        "channels_ok={channels_ok} channels_failed={channels_failed}"
+        "channels_ok={channels_ok} channels_failed={channels_failed} high={high} medium={medium}"
     ).format(**stats)
     print("SUMMARY " + line)
     _summary(f"## Run summary\n`{line}`")

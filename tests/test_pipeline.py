@@ -92,6 +92,7 @@ def test_run_twice_writes_nothing_new(tmp_path):
     store = CsvStore(tmp_path / "jobs.csv", tmp_path / "state.json")
     s1 = run(cfg, source=FakeSource(), store=store)
     assert s1["written"] == 2 and s1["read"] == 4
+    assert s1["high"] + s1["medium"] <= s1["written"]  # counts for the notification
     assert store.load_state() == {"testjobs": 104}
     s2 = run(cfg, source=FakeSource(), store=store)
     assert s2["read"] == 0 and s2["written"] == 0
