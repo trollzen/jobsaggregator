@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from jobagg.config import load_config
+from jobagg.config import load_config, load_env
 from jobagg.dedupe import Deduper
 from jobagg.extract import RuleExtractor
 from jobagg.prefilter import Prefilter
@@ -20,11 +20,42 @@ from jobagg.store import make_store
 log = logging.getLogger("jobagg")
 
 
-def run(cfg: dict, dry_run: bool = False, source=None, store=None) -> dict:
+def build_sources(cfg: dict, source=None, tg_source=None) -> list[tuple[str, object]]:
+    """(channel name, source) pairs: public channels via t.me/s, closed via Telethon."""
     fetch_cfg = cfg["fetch"]
-    source = source or TelegramWebSource(
-        timeout_s=fetch_cfg.get("timeout_s", 20), delay_s=fetch_cfg.get("delay_s", 1.5)
-    )
+    pairs: list[tuple[str, object]] = []
+    if cfg["channels"]:
+        web = source or TelegramWebSource(
+            timeout_s=fetch_cfg.get("timeout_s", 20), delay_s=fetch_cfg.get("delay_s", 1.5)
+        )
+        pairs += [(ch, web) for ch in cfg["channels"]]
+    tg_channels = cfg["telethon"].get("channels") or []
+    if tg_channels:
+        if tg_source is None:
+            try:
+                from jobagg.sources.telethon_src import TelethonSource
+
+                tg_source = TelethonSource(
+                    tg_channels, session=cfg["telethon"].get("session", "tg.session")
+                )
+            except Exception as e:
+                log.error("Telegram API unavailable, closed channels skipped: %s", e)
+                tg_source = _Broken(e)
+        pairs += [(c["name"], tg_source) for c in tg_channels]
+    return pairs
+
+
+class _Broken:
+    def __init__(self, err: Exception):
+        self.err = err
+
+    def fetch(self, *args, **kwargs):
+        raise RuntimeError(self.err)
+
+
+def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=None) -> dict:
+    fetch_cfg = cfg["fetch"]
+    sources = build_sources(cfg, source, tg_source)
     store = store or make_store(cfg["store"])
     prefilter = Prefilter.from_config(cfg["prefilter"])
     extractor = RuleExtractor()  # LLMExtractor in stage 5 (ai.mode: hybrid)
@@ -49,9 +80,9 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None) -> dict:
     to_write = []
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    for channel in cfg["channels"]:
+    for channel, src in sources:
         try:
-            posts = source.fetch(
+            posts = src.fetch(
                 channel,
                 after_id=state.get(channel, 0),
                 max_posts=fetch_cfg.get("max_posts_per_channel", 200),
@@ -90,26 +121,21 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None) -> dict:
         store.save_state(new_state)
 
     health_fail = (
-        cfg["health"].get("fail_if_no_posts", True)
-        and cfg["channels"]
-        and stats["channels_ok"] == 0
+        cfg["health"].get("fail_if_no_posts", True) and sources and stats["channels_ok"] == 0
     )
     stats["healthy"] = not health_fail
     return stats
 
 
 def dump_posts(cfg: dict, limit: int, out_dir: str = "out") -> Path:
-    fetch_cfg = cfg["fetch"]
-    source = TelegramWebSource(
-        timeout_s=fetch_cfg.get("timeout_s", 20), delay_s=fetch_cfg.get("delay_s", 1.5)
-    )
+    sources = build_sources(cfg)
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     path = Path(out_dir) / f"posts_{datetime.now():%Y%m%d_%H%M}.jsonl"
     report = []
     with open(path, "w", encoding="utf-8") as f:
-        for channel in cfg["channels"]:
+        for channel, src in sources:
             try:
-                posts = source.fetch(channel, max_posts=limit, backfill_days=3650)
+                posts = src.fetch(channel, max_posts=limit, backfill_days=3650)
                 report.append(
                     f"{channel}: OK, {len(posts)} posts, dated={sum(1 for p in posts if p.date)}"
                 )
@@ -145,6 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
+    load_env()
     cfg = load_config(args.config)
     if args.store:
         cfg["store"]["type"] = args.store

@@ -13,10 +13,11 @@ class Post(BaseModel):
     date: datetime | None = None
     text: str = ""
     links: list[str] = Field(default_factory=list)
+    link: str = ""  # set for private channels (t.me/c/...)
 
     @property
     def url(self) -> str:
-        return f"https://t.me/{self.channel}/{self.message_id}"
+        return self.link or f"https://t.me/{self.channel}/{self.message_id}"
 
 
 class Job(BaseModel):

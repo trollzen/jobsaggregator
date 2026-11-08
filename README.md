@@ -17,6 +17,19 @@ jobagg --dump-posts 60      # сохранить сырые посты в out/po
 jobagg --store sheets       # писать в Google Sheets (нужны SHEET_ID и GOOGLE_SA_JSON)
 ```
 
+## Закрытые каналы (Telegram API)
+
+Запуск с твоего компьютера, а не с GitHub Actions: у сессии должен быть постоянный IP.
+
+1. Получить `api_id` и `api_hash` на https://my.telegram.org → API development tools.
+2. `cp .env.example .env` и заполнить `TG_API_ID`, `TG_API_HASH`.
+3. `pip install -e ".[telegram]"` и `python scripts/tg_login.py`: вход по коду из Telegram,
+   сессия сохраняется в `tg.session` (в git не попадает). Скрипт печатает каналы с id.
+4. Нужные каналы вписать в `config.yaml` → `telethon.channels`.
+5. Проверка: `jobagg --dry-run`.
+
+`tg.session` даёт полный доступ к аккаунту: не пересылай его и не клади в репозиторий.
+
 ## Настройка
 
 Всё в `config.yaml`: каналы, ключевые слова префильтра, режим AI, порог дедупликации, хранилище.

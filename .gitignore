@@ -10,3 +10,5 @@ out/
 # secrets: never commit
 service_account*.json
 *credentials*.json
+*.session
+*.session-journal
