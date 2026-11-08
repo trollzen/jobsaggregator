@@ -12,3 +12,6 @@ service_account*.json
 *credentials*.json
 *.session
 *.session-journal
+
+# logs of scheduled runs
+logs/
