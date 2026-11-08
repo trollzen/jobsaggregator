@@ -105,6 +105,8 @@ def test_health_check_fails_when_all_channels_fail(tmp_path):
             raise RuntimeError("down")
 
     cfg = load_config(ROOT / "config.yaml")
+    cfg["channels"] = ["testjobs"]
+    cfg["telethon"]["channels"] = []
     store = CsvStore(tmp_path / "jobs.csv", tmp_path / "state.json")
     stats = run(cfg, source=Broken(), store=store)
     assert stats["channels_failed"] == 1 and stats["healthy"] is False

@@ -16,6 +16,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from jobagg.config import load_env  # noqa: E402
 
 load_env()
+# Windows console defaults to cp1252 and can't print Cyrillic channel names
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 try:
     from telethon.sync import TelegramClient
 except ImportError:

@@ -1,6 +1,11 @@
 # Публичные каналы: читаются через https://t.me/s/<канал>, без аккаунта
 channels:
   - opento_dev
+  - zarubezhom_jobs
+  - runello_rus_datascience
+  - dataviz_jobs
+  - remote_jobs_relocate
+  - choicy_work
   # jobsbio: превью закрыто (редирект), перенести в telethon.channels, если нужен
 
 # Закрытые каналы: через Telegram API (Telethon), запуск с твоего компьютера.
@@ -20,7 +25,7 @@ fetch:
 prefilter:
   min_length: 80
   include_keywords:            # хотя бы одно слово должно быть в посте
-    - вакансия
+    - ваканси                  # вакансия, вакансии, вакансий
     - ищем
     - требуется
     - открыта позиция
@@ -44,6 +49,8 @@ prefilter:
     - "open to work"
     - реклама
     - "#промо"
+    - "t.me/addlist"           # реклама «папок» с каналами
+    - "забрать папку"
 
 ai:
   mode: "off"                  # off | hybrid (этап 5)
