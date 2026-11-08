@@ -86,6 +86,12 @@ GitHub Actions используется только для проверки к�
   склеивались в одну (pharmed_recruitment: 51 → 1). Теперь отрезаются только utm_*, mc_*, fbclid, gclid, yclid,
   ref, source.
 
+- Решение владельца (2026-11-08): products_jobs и projects_jobs убраны (группы с болтовнёй), каналов 35
+  (33 открытых + 2 закрытых: projects_jobs_feed, findmyremote_product). `fetch.backfill_days: 30`.
+  Первая большая запись: `jobagg --days 30 --max-posts 1000` → 35/35 прочитаны, 1452 поста, written=95
+  (высокий 16, средний 48), дублей 5 отсеяно. В таблице 96 строк, хэши уникальны, `_state` сохранён,
+  дальше ежедневный запуск в 16:00 продолжает с этого места.
+
 ## Следующие шаги
 4. Закрытые каналы (если появятся): `config.yaml` → `telethon.channels` (формат `{name: "...", id: -100...}`).
    Список каналов с id печатает `.venv\Scripts\python scripts\tg_login.py` (повторный вход не нужен).

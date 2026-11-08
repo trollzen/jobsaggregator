@@ -43,13 +43,12 @@ telethon:
   channels:
     # веб-версия закрыта, владелец состоит (id из scripts/tg_login.py)
     - {name: "projects_jobs_feed", id: -1001229149302}
-    - {name: "products_jobs", id: -1001088399568}      # группа
-    - {name: "projects_jobs", id: -1001095758423}      # группа
+    # products_jobs и projects_jobs убраны по решению владельца (2026-11-08): группы с болтовнёй
     - {name: "findmyremote_product", id: -1002337083766}
 
 fetch:
   max_posts_per_channel: 200   # ограничение бэкфилла при первом запуске
-  backfill_days: 7             # и не старше этого срока
+  backfill_days: 30            # первый запуск нового канала: не старше 30 дней
   timeout_s: 20
   delay_s: 1.5                 # пауза между запросами страниц
 
