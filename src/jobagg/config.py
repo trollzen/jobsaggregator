@@ -12,7 +12,7 @@ def load_env(path: str | Path = ".env") -> None:
     p = Path(path)
     if not p.exists():
         return
-    for line in p.read_text(encoding="utf-8").splitlines():
+    for line in p.read_text(encoding="utf-8-sig").splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
@@ -21,7 +21,7 @@ def load_env(path: str | Path = ".env") -> None:
 
 
 def load_config(path: str | Path = "config.yaml") -> dict[str, Any]:
-    with open(path, encoding="utf-8") as f:
+    with open(path, encoding="utf-8-sig") as f:
         cfg = yaml.safe_load(f) or {}
     cfg.setdefault("channels", [])
     for key in ("fetch", "prefilter", "ai", "dedupe", "store", "health", "telethon"):
