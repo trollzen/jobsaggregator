@@ -86,6 +86,11 @@ domain_keywords:
     клинические исследования, клинических исследований, регистрация лекарств*, лекарственн*"
   # RU, сокращения (отдельными словами)
   - "[МИС], [ЛИС], [РИС], [ЭМК], [ЭМД], [ЛПУ], [МО], [ЕГИСЗ], [ОМС]"
+  # Профиль: онкология, геномика, медицинский AI
+  - "oncology, precision oncology, cancer, tumor, tumour, biomarker, biomarkers, companion diagnostics,
+    molecular diagnostics, genomic, genetic testing, sequencing, real-world data, trial matching,
+    patient recruitment, clinical AI, medical AI, health AI, clinical NLP, clinical documentation"
+  - "онколог*, опухол*, [рак], [рака], [раком], биомаркер*, секвенир*, генетическ*, молекулярн*"
 
 # Бонусы работодателя: вырезаются из текста перед проверкой сферы (это льготы, а не сфера)
 domain_ignore_phrases:
@@ -108,7 +113,8 @@ role_keywords:
   # Business / system analyst
   - "business analyst, business analysis, [BA], requirements analyst, system analyst, systems analyst,
     clinical analyst, healthcare analyst, analyst"
-  - "бизнес-аналитик*, бизнес-анализ, системный аналитик, аналитик требований, аналитик*"
+  - "бизнес-аналитик*, бизнес-анализ, системный аналитик, аналитик требований, аналитик*,
+    системным анализом, solution specialist, solutions specialist"
   # Product
   - "product owner, [PO], product manager, product lead, clinical product manager,
     clinical product specialist"
@@ -127,6 +133,60 @@ role_keywords:
     consultant, consulting, solutions consultant, implementation specialist, implementation consultant,
     customer success manager, regulatory affairs specialist, regulatory affairs manager"
   - "консультант*, специалист по внедрению, менеджер по работе с клиентами, специалист по регистрации"
+  # Medical expert for AI
+  - "clinical SME, clinical subject matter expert, medical expert, clinical expert, medical AI,
+    clinical AI specialist, AI trainer, medical annotator, clinical annotator, clinical content,
+    medical content, clinical knowledge, medical reviewer, clinical reviewer, clinical evaluation"
+  - "врач-методолог, врач методолог, медицинский методолог, медицинский аналитик, клинический аналитик,
+    врач-эксперт, медицинский эксперт, медицинский асессор, медицинский редактор, разметк*"
+  # Clinical data
+  - "clinical data abstractor, data abstraction, medical record abstraction, data curator, data curation,
+    oncology data, clinical data specialist, clinical data manager, annotation lead"
+  - "абстрагирован*, куратор данных, специалист по данным пациентов"
+  # Clinical research
+  - "feasibility, study feasibility, site feasibility, patient recruitment, trial matching,
+    clinical trial manager, clinical trial specialist, clinical operations, clinical research manager,
+    clinical scientist, medical monitor, study manager"
+  - "менеджер клинических исследований, медицинский монитор, специалист по клиническим исследованиям"
+  # Medical affairs
+  - "medical advisor, medical manager, medical science liaison, [MSL], medical affairs, medical lead,
+    medical director, scientific advisor"
+  - "медицинский советник, медицинский менеджер, медицинский директор, руководитель медицинского направления"
+  # Genomics / oncology
+  - "clinical genomics, variant curation, variant scientist, variant interpretation, biomarker specialist,
+    precision oncology specialist, tumor board"
+  - "специалист по генетическ*, куратор вариантов"
+  # Commercial / strategy
+  - "competitive intelligence, pipeline analyst, market research, market access, healthcare strategy,
+    life science strategy, pre-sales, presales, solutions specialist, solutions engineer, business development"
+  - "аналитик рынка, конкурентн* анализ, стратегическ* аналитик"
+  # Operations / leadership
+  - "operations manager, clinical operations manager, team lead, head of clinical, process improvement,
+    operations lead"
+  - "руководитель отдела, руководитель направления, тимлид, операционный менеджер"
+
+# Не мои роли: если есть слово отсюда и НЕТ ни одной моей роли (role_keywords) — пост отбрасывается.
+# Если есть и то и другое — пост остаётся, в колонке «Роль (совпадение)» пометка «не моё: ...».
+role_exclude:
+  - "registered nurse, nursing staff, staff physician, attending physician, general practitioner,
+    sales representative, medical representative, field sales, software engineer, backend, frontend,
+    full stack, data engineer, ml engineer, devops, qa engineer"
+  - "прием пациентов, приём пациентов, ведение пациентов, врач-терапевт, врач терапевт, врач-педиатр,
+    медсестр*, медицинская сестра, медицинский представитель, медпред*, сертификат специалиста,
+    аккредитация специалиста, разработчик, программист"
+
+# Мой опыт: сколько слов отсюда есть в посте -> колонка «Приоритет» (простая замена Match без AI).
+# Короткие латинские сокращения стоят в [скобках], иначе "AI" находился бы внутри "email", "MD" — в "cmd".
+my_experience:
+  - "oncology, precision oncology, [NGS], sequencing, biomarker, genomic, clinical trial, trial matching,
+    eligibility, patient recruitment, feasibility, clinical data, abstraction, annotation, real-world,
+    NCCN, guidelines, [AI], [LLM], machine learning, [NLP], automation, product owner, requirements,
+    user stories, backlog, Jira, Agile, Scrum, project manager, delivery, stakeholder, team lead, [GCP],
+    physician, [MD], medical degree, remote, Armenia, Yerevan"
+  - "онколог*, геном*, биомаркер*, клинические исследования, разметк*, требования, бэклог, удален*, удалён*,
+    Армения, Ереван, врач"
+priority:
+  high_from: 3                 # столько совпадений и больше = «высокий»; от 1 = «средний»; 0 = пусто
 
 ai:
   mode: "off"                  # off | hybrid (этап 5)

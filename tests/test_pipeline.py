@@ -76,8 +76,8 @@ def test_dedupe_exact_and_fuzzy():
 def test_build_rows_by_header_name():
     header = ["Моя колонка", "Должность", "Статус"]
     assert build_rows(header, [Job(title="QA")]) == [["", "QA", "новая"]]
-    assert len(HEADER) == 25
-    assert HEADER[-2:] == ["Сфера (совпадение)", "Роль (совпадение)"]
+    assert len(HEADER) == 27
+    assert HEADER[-4:] == ["Сфера (совпадение)", "Роль (совпадение)", "Приоритет", "Совпадения"]
 
 
 class FakeSource:

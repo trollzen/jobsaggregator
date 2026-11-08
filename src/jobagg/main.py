@@ -75,6 +75,7 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
         "filtered_out": 0,  # sum of the three below
         "not_vacancy": 0,
         "not_domain": 0,
+        "not_mine": 0,
         "not_role": 0,
         "extracted": 0,
         "duplicates": 0,
@@ -99,20 +100,22 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
             continue
         stats["channels_ok"] += 1
         stats["read"] += len(posts)
-        ch = {"not_vacancy": 0, "not_domain": 0, "not_role": 0}
+        ch = {"not_vacancy": 0, "not_domain": 0, "not_mine": 0, "not_role": 0}
         for post in posts:
             if not prefilter.passes(post):
                 ch["not_vacancy"] += 1
                 continue
-            reason, domain_match, role_match = topic.check(post.text)
-            if reason:
-                ch[reason] += 1
+            res = topic.check(post.text)
+            if res.reason:
+                ch[res.reason] += 1
                 continue
             for job in extractor.extract(post):
                 stats["extracted"] += 1
                 job.found_at = now
-                job.domain_match = domain_match
-                job.role_match = role_match
+                job.domain_match = res.domain
+                job.role_match = res.role
+                job.priority = res.priority
+                job.experience_match = res.experience
                 checked = deduper.check(job)
                 if checked is None:
                     stats["duplicates"] += 1
@@ -124,7 +127,7 @@ def run(cfg: dict, dry_run: bool = False, source=None, store=None, tg_source=Non
             stats[key] += n
             stats["filtered_out"] += n
         log.info(
-            "channel %s: posts=%d not_vacancy=%d not_domain=%d not_role=%d left=%d",
+            "channel %s: posts=%d not_vacancy=%d not_domain=%d not_mine=%d not_role=%d left=%d",
             channel,
             len(posts),
             *ch.values(),
@@ -203,7 +206,8 @@ def main(argv: list[str] | None = None) -> int:
 
     stats = run(cfg, dry_run=args.dry_run)
     line = (
-        "read={read} not_vacancy={not_vacancy} not_domain={not_domain} not_role={not_role} "
+        "read={read} not_vacancy={not_vacancy} not_domain={not_domain} "
+        "not_mine={not_mine} not_role={not_role} "
         "filtered_out={filtered_out} extracted={extracted} "
         "duplicates={duplicates} possible_dups={possible_dups} written={written} "
         "channels_ok={channels_ok} channels_failed={channels_failed}"

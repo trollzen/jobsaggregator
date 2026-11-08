@@ -48,13 +48,44 @@ def test_npm_and_time_are_not_pm():
 
 
 def test_clinical_pm_in_biotech_passes_both():
-    reason, dom, role = TOPIC.check("Clinical Project Manager в биотех-компании")
-    assert reason is None
-    assert "биотех*" in dom
-    assert "clinical project manager" in role
+    res = TOPIC.check("Clinical Project Manager в биотех-компании")
+    assert res.reason is None
+    assert "биотех*" in res.domain
+    assert "clinical project manager" in res.role
 
 
 def test_reasons_and_switched_off_filter():
-    assert TOPIC.check("Python developer, fintech")[0] == "not_domain"
-    assert TOPIC.check("Senior Python developer in a hospital")[0] == "not_role"
-    assert TopicFilter().check("anything") == (None, "", "")
+    assert TOPIC.check("Python developer, fintech").reason == "not_domain"
+    assert TOPIC.check("Senior accountant in a hospital").reason == "not_role"
+    assert TopicFilter().check("anything").reason is None
+
+
+def test_medical_representative_without_my_roles_dropped():
+    res = TOPIC.check("Медицинский представитель в фармацевтическую компанию, Москва")
+    assert res.reason == "not_mine"
+
+
+def test_therapist_with_patients_dropped():
+    assert TOPIC.check("Врач-терапевт, приём пациентов, полный день").reason == "not_mine"
+
+
+def test_not_mine_with_my_role_is_kept_and_marked():
+    res = TOPIC.check("Team lead for backend developers in a clinical trials company")
+    assert res.reason is None
+    assert "не моё: backend" in res.role
+
+
+def test_clinical_sme_oncology_ai_high_priority():
+    res = TOPIC.check("Clinical SME for oncology AI, remote")
+    assert res.reason is None
+    assert res.priority == "высокий"
+    assert {"oncology", "AI", "remote"} <= set(res.experience.split(", "))
+
+
+def test_priority_medium_and_ai_is_whole_word():
+    res = TOPIC.check("Clinical Project Manager в биотех-компании, email: hr@x.com")
+    assert res.priority == "средний"  # only "project manager"; "email" is not AI
+
+
+def test_yo_duplicates_count_once():
+    assert TOPIC.experience.find(normalize("Удалённая работа")) == ["удален*"]
