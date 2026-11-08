@@ -5,10 +5,11 @@
 param([string]$At = "16:00")  # время ежедневного запуска
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$script = Join-Path $root "scripts\run_scheduled.ps1"
+# через wscript + run_hidden.vbs: без окна консоли (его можно было случайно закрыть)
+$script = Join-Path $root "scripts\run_hidden.vbs"
 
-$action = New-ScheduledTaskAction -Execute "powershell.exe" `
-    -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$script`"" `
+$action = New-ScheduledTaskAction -Execute "wscript.exe" `
+    -Argument "//B //NoLogo `"$script`"" `
     -WorkingDirectory $root
 $trigger = New-ScheduledTaskTrigger -Daily -At $At
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries `

@@ -41,6 +41,8 @@ function Show-Toast([string]$title, [string]$text, [string]$url = "") {
 $env:PYTHONIOENCODING = "utf-8"
 $exe = Join-Path $root ".venv\Scripts\jobagg.exe"
 $start = Stamp
+# отметка о старте сразу: если запуск прервут, это будет видно в логе
+[IO.File]::AppendAllLines($log, [string[]]@("$start ===== start ====="), $utf8)
 if (Test-Path $exe) {
     cmd /c "`"$exe`" --config `"$Config`" > `"$tmp`" 2>&1"
     $code = $LASTEXITCODE
@@ -53,7 +55,7 @@ Remove-Item $tmp -ErrorAction SilentlyContinue
 $lines = @($lines | Where-Object { $_ -notmatch "HTTP Request:" -and $_.Trim() -ne "" })
 
 # 2. дописать в лог: каждая строка с датой и временем
-$out = @("$start ===== start =====")
+$out = @()
 $out += $lines | ForEach-Object { "$start $_" }
 $out += "$(Stamp) ===== end, exit code $code ====="
 [IO.File]::AppendAllLines($log, [string[]]$out, $utf8)
