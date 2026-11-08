@@ -1,0 +1,58 @@
+# Каналы: только публичные, у которых открывается https://t.me/s/<канал>
+channels:
+  - jobsbio
+  - opento_dev
+
+fetch:
+  max_posts_per_channel: 200   # ограничение бэкфилла при первом запуске
+  backfill_days: 7             # и не старше этого срока
+  timeout_s: 20
+  delay_s: 1.5                 # пауза между запросами страниц
+
+# Грубый префильтр без AI
+prefilter:
+  min_length: 80
+  include_keywords:            # хотя бы одно слово должно быть в посте
+    - вакансия
+    - ищем
+    - требуется
+    - открыта позиция
+    - зарплата
+    - зп
+    - hiring
+    - vacancy
+    - we are looking
+    - position
+    - salary
+    - job
+    - remote
+    - удален
+    - откликнуться
+    - резюме присылайте
+  exclude_keywords:            # явные не-вакансии
+    - "#резюме"
+    - "#ищуработу"
+    - "ищу работу"
+    - "#cv"
+    - "open to work"
+    - реклама
+    - "#промо"
+
+ai:
+  mode: "off"                  # off | hybrid (этап 5)
+  model: claude-haiku-5-5
+  monthly_budget_usd: 5
+
+dedupe:
+  fuzzy_threshold: 92
+  window_days: 30
+
+store:
+  type: csv                    # csv | sheets
+  csv_path: out/jobs.csv
+  state_path: out/state.json   # только для csv
+  sheet_tab: Вакансии          # для sheets; SHEET_ID и GOOGLE_SA_JSON из окружения
+  state_tab: _state
+
+health:
+  fail_if_no_posts: true       # все каналы вернули 0 постов -> ошибка запуска

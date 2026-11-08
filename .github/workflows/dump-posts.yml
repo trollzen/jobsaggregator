@@ -1,0 +1,28 @@
+# Manual run: checks that t.me/s works from GitHub's servers and saves raw posts
+# for the golden set (stage 2). Result: "raw-posts" artifact + summary per channel.
+name: Dump posts
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Posts per channel"
+        default: "60"
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - run: jobagg --dump-posts "${{ inputs.limit }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: raw-posts
+          path: out/posts_*.jsonl
+          if-no-files-found: error
