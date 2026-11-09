@@ -14,7 +14,7 @@ channels:
   - bigtechjobs
   - jobsbt
   - Microbiotechjobs
-  - clinicalresearchjobvacancies
+  # clinicalresearchjobvacancies убран по решению владельца (2026-11-09)
   - Baprofessionals
   - jobs_pm
   - forproducts
